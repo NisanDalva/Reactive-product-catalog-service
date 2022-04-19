@@ -18,7 +18,6 @@ public class CatalogServiceImpl implements CatalogService {
 
 
     public Mono<Boolean> isExists (CatalogBoundary boundary) {
-
         return store.findByProductId(boundary.getProductId())
             .hasElement();
     }
@@ -36,7 +35,8 @@ public class CatalogServiceImpl implements CatalogService {
             .switchIfEmpty(Mono.error(()->new BadRequestException("id must be unique")))
             .map(this::boundaryToEntity)
             .flatMap(this.store::save)
-		    .map(this::entityToBoundary); 
+		    .map(this::entityToBoundary)
+            .log(); 
     }
 
     @Override
@@ -47,8 +47,11 @@ public class CatalogServiceImpl implements CatalogService {
 
     @Override
     public Mono<CatalogBoundary> getById(String id) {
-        // TODO Auto-generated method stub
-        return null;
+        return this.store
+			.findByProductId(id)
+			.switchIfEmpty(Mono.error(()->new NotFoundException("could not find content for id: " + id)))
+			.map(this::entityToBoundary)
+			.log();
     }
 
     @Override

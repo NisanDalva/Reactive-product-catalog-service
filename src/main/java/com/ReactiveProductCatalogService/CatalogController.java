@@ -32,6 +32,14 @@ public class CatalogController {
 		return catalogService.create(catalog);
 	}
 
+	@RequestMapping(
+		path="/catalog/{productId}",
+		method = RequestMethod.POST,
+		produces = MediaType.APPLICATION_JSON_VALUE)
+	public Mono<CatalogBoundary> getById(@PathVariable("productId") String productId) {
+		return catalogService.getById(productId);
+	}
+
 	// @RequestMapping(
 	// 		path="/keyvalue",
 	// 		method = RequestMethod.GET,
