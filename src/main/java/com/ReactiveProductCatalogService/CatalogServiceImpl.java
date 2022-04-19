@@ -25,108 +25,19 @@ public class CatalogServiceImpl implements CatalogService {
 
     @Override
     public Mono<CatalogBoundary> create(CatalogBoundary catalog) {
-        
-        // return Mono.just(catalog)
-        //     .filterWhen(c -> isExists(c).map(exist -> !exist))
-        //     .switchIfEmpty(Mono.error(()->new RuntimeException("id must be unique")))
-        //     .map(this::boundaryToEntity)
-        //     .flatMap(this.store::save)
-		//     .map(this::entityToBoundary);
-
-
         return Mono.just(catalog)
             .flatMap(c -> {
                 if (c.getProductId() == null) {
-                    return Mono.error(()->new RuntimeException("id must be not null"));
+                    return Mono.error(()->new BadRequestException("id must be not null"));
                 }
                 return Mono.just(c);
             })
             .filterWhen(c -> isExists(c).map(exist -> !exist))
-            .switchIfEmpty(Mono.error(()->new RuntimeException("id must be unique")))
+            .switchIfEmpty(Mono.error(()->new BadRequestException("id must be unique")))
             .map(this::boundaryToEntity)
             .flatMap(this.store::save)
 		    .map(this::entityToBoundary); 
-
-        // return null;
     }
-
-    // @Override
-    // public Mono<CatalogBoundary> create(CatalogBoundary catalog) {
-        
-    //     return Mono.just(catalog)
-    //         .filterWhen(c -> isExists(c).map(exist -> !exist))
-    //         .switchIfEmpty(Mono.error(()->new RuntimeException("id must be unique")))
-    //         .map(this::boundaryToEntity)
-    //         .flatMap(this.store::save)
-	// 	    .map(this::entityToBoundary); 
-    // }
-
-    // @Override
-    // public Mono<CatalogBoundary> create(CatalogBoundary catalog) {
-    //     System.err.println("catalog - " +  catalog.toString());
-    //     return Mono.just(catalog)
-    //         .flatMap((boundary) -> {
-
-    //             if (boundary.getProductId() == null) {
-    //                 return Mono.error(()->new RuntimeException("id must be not null"));
-    //             }
-                
-    //             System.err.println("boundary - " +  boundary.toString());
-
-    //             // store.findByProductId(boundary.getProductId())
-    //             //     .flatMap(entity -> {
-    //             //         System.err.println("########################");
-    //             //         // if (entity != null && entity.getProductId() == boundary.getProductId()) {
-    //             //         //     // System.err.println(entity.toString());
-    //             //         //     return Mono.error(()->new RuntimeException("id must be unique"));
-    //             //         // } else {
-    //             //         //     System.err.println("in else - " + entity.toString());
-    //             //         //     return Mono.just(boundary);
-    //             //         // }
-
-    //             //             if (entity.getProductId().equals(boundary.getProductId())) {
-    //             //                 return Mono.error(()->new RuntimeException("id must be unique"));
-    //             //             }
-    //             //             return Mono.just(boundary);
-
-    //             //     });
-
-    //             // return store.findByProductId(boundary.getProductId())
-    //             // .hasElement(bool -> {
-    //             //     if (bool)
-    //             //         return Mono.error(()->new RuntimeException("id must be unique"));
-    //             //     else
-    //             //         return Mono.just(boundary);
-
-    //             // });
-
-    //             // store.findByProductId(boundary.getProductId())
-
-
-    //             // return store.findByProductId(boundary.getProductId())
-    //             //     .switchIfEmpty(Mono.just(this.boundaryToEntity(boundary)));
-
-                
-    //             // return store
-	// 			// .findByProductId(boundary.getProductId())
-	// 			// .then(Mono.error(()->new NotFoundException("could not find content for id: " + boundary.getProductId())))
-	// 			// .defaultIfEmpty(Mono.just(this.boundaryToEntity(boundary)));
-
-
-
-    //             return Mono.just(boundary);
-
-    //         })
-    //         .map(this::boundaryToEntity)
-    //         .flatMap(this.store::save) 
-	// 	    .map(this::entityToBoundary); 
-
-    //     // return Mono.just(catalog)
-    //     // .map(this::boundaryToEntity)
-    //     //     .flatMap(this.store::save) 
-	// 	//     .map(this::entityToBoundary); 
-
-    // }
 
     @Override
     public Flux<CatalogBoundary> getAll(int size, int page) {
