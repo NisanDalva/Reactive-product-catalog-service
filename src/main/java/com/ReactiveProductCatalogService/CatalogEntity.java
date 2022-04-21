@@ -8,15 +8,14 @@ import org.springframework.data.annotation.Id;
 
 @Document(collection = "catalogs")
 public class CatalogEntity {
-    // @Id private String id;
     @Id private String productId;
     private String name;
-    private double price;
+    private Double price;
     private String description;
     private Map<String, Object> productDetails;
     private String category;
     
-    public CatalogEntity(String productId, String name, double price, String description,
+    public CatalogEntity(String productId, String name, Double price, String description,
             Map<String, Object> productDetails, String category) {
         this.productId = productId;
         this.name = name;
@@ -45,11 +44,11 @@ public class CatalogEntity {
         this.name = name;
     }
 
-    public double getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 

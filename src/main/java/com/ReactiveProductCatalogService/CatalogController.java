@@ -34,21 +34,35 @@ public class CatalogController {
 
 	@RequestMapping(
 		path="/catalog/{productId}",
-		method = RequestMethod.POST,
+		method = RequestMethod.GET,
 		produces = MediaType.APPLICATION_JSON_VALUE)
 	public Mono<CatalogBoundary> getById(@PathVariable("productId") String productId) {
 		return catalogService.getById(productId);
 	}
 
-	// @RequestMapping(
-	// 		path="/keyvalue",
-	// 		method = RequestMethod.GET,
-	// 		produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-	// public Flux<DemoBoundary> getAll(
-	// 		@RequestParam(name = "size", required = false, defaultValue = "10") int size, 
-	// 		@RequestParam(name = "page", required = false, defaultValue = "0") int page) {
-	// 	return demoService.getAll(size, page);
-	// }
+	@RequestMapping(
+			path="/catalog",
+			method = RequestMethod.GET,
+			produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public Flux<CatalogBoundary> getAll(
+			@RequestParam(name = "page", required = false, defaultValue = "0") int page,
+			@RequestParam(name = "size", required = false, defaultValue = "10") int size,
+			@RequestParam(name = "sortBy", required = false, defaultValue = "_id") String sortBy,
+			@RequestParam(name = "sortOrder", required = false, defaultValue = "asc") String sortOrder,
+			@RequestParam(name = "filterType", required = false, defaultValue = "") String filterType,
+			@RequestParam(name = "filterValue", required = false, defaultValue = "") String filterValue,
+			@RequestParam(name = "minPrice", required = false, defaultValue = "0") double minPrice,
+			@RequestParam(name = "maxPrice", required = false, defaultValue = "100") double maxPrice
+			) {
+		return catalogService.getAll(page, size, sortOrder, sortBy, filterType, filterValue, minPrice, maxPrice);
+	}
+
+	@RequestMapping(
+			path="/catalog",
+			method = RequestMethod.DELETE)
+	public Mono<Void> cleanup() {
+		return catalogService.cleanup();
+	}
 
 	// @RequestMapping(
 	// 		path="/keyvalue/{id}",
@@ -56,13 +70,6 @@ public class CatalogController {
 	// 		produces = MediaType.APPLICATION_JSON_VALUE)
 	// public Mono<DemoBoundary> getById(@PathVariable("id") String id) {
 	// 	return demoService.getById(id);
-	// }
-
-	// @RequestMapping(
-	// 		path="/keyvalue",
-	// 		method = RequestMethod.DELETE)
-	// public Mono<Void> cleanup() {
-	// 	return demoService.cleanup();
 	// }
 
 }

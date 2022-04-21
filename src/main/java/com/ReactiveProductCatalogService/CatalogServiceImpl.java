@@ -1,5 +1,10 @@
 package com.ReactiveProductCatalogService;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Range;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort.Direction;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -8,19 +13,13 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class CatalogServiceImpl implements CatalogService {
-    private CatalogDao store;
+    private CatalogDao catalogsRepo;
 	
 	@Autowired
-	public CatalogServiceImpl(CatalogDao store) {
+	public CatalogServiceImpl(CatalogDao catalogsRepo) {
 		super();
-		this.store = store;
+		this.catalogsRepo = catalogsRepo;
 	}
-
-
-    public Mono<Boolean> isExists (CatalogBoundary boundary) {
-        return store.findByProductId(boundary.getProductId())
-            .hasElement();
-    }
 
     @Override
     public Mono<CatalogBoundary> create(CatalogBoundary catalog) {
@@ -29,36 +28,89 @@ public class CatalogServiceImpl implements CatalogService {
                 if (c.getProductId() == null) {
                     return Mono.error(()->new BadRequestException("id must be not null"));
                 }
+
+                if (c.getName() == null || c.getDescription() == null ||
+                        c.getPrice() == null || c.getCategory() == null) {
+                            
+                            return Mono.error(()->new BadRequestException(
+                                "body must include name, description, price and category (productDetails is optional)"));
+                }
+
                 return Mono.just(c);
             })
-            .filterWhen(c -> isExists(c).map(exist -> !exist))
-            .switchIfEmpty(Mono.error(()->new BadRequestException("id must be unique")))
+            .filterWhen(c -> isCatalogExists(c).map(exist -> !exist))
+            .switchIfEmpty(Mono.error(()->new RuntimeException("id must be unique")))
             .map(this::boundaryToEntity)
-            .flatMap(this.store::save)
+            .flatMap(this.catalogsRepo::save)
 		    .map(this::entityToBoundary)
             .log(); 
     }
 
+    public Mono<Boolean> isCatalogExists (CatalogBoundary boundary) {
+        return this.catalogsRepo.findByProductId(boundary.getProductId())
+            .hasElement();
+    }
+
+    public Flux<Pageable> pageableFactory(int page, int size, String direction, String sortBy) {
+        return Flux.just(PageRequest.of(page, size, Direction.ASC, direction, sortBy))
+                    .map(pageable -> {
+                        if (direction.equals("desc"))
+                            return PageRequest.of(page, size, Direction.DESC, sortBy);
+                        return pageable;
+                    });
+    }
+
+    public Flux<CatalogEntity> queryExecuter(int page, int size, String direction, String sortBy, String filterType, String filterValue,
+                                        double minPrice, double maxPrice) {
+
+        return pageableFactory(page, size, direction, sortBy)
+            .flatMap(pageable -> {
+
+                switch(filterType) {
+                    case "byName":
+                        return this.catalogsRepo.findAllByNameRegex(filterValue, pageable);
+                    
+                    case "byCategoryName":
+                        return this.catalogsRepo.findAllByCategoryRegex(filterValue, pageable);
+
+                    case "byPrice":
+                        Range<Double> range = Range.closed(minPrice, maxPrice);
+                        return this.catalogsRepo.findAllByPriceBetween(range, pageable);
+
+                    case "":
+                        return this.catalogsRepo.findAllByProductIdNotNull(pageable);
+                    
+                    default:
+                        return Mono.error(()->new BadRequestException("invalid filterType, got: " + filterType));
+                }
+            });
+    }
+
+
     @Override
-    public Flux<CatalogBoundary> getAll(int size, int page) {
-        // TODO Auto-generated method stub
-        return null;
+    public Flux<CatalogBoundary> getAll(int page, int size, String direction, String sortBy, String filterType, String filterValue,
+                                            double minPrice, double maxPrice) {
+        
+        return queryExecuter(page, size, direction, sortBy, filterType, filterValue, minPrice, maxPrice)
+            .map(this::entityToBoundary)
+            .log();
     }
 
     @Override
     public Mono<CatalogBoundary> getById(String id) {
-        return this.store
+        return this.catalogsRepo
 			.findByProductId(id)
-			.switchIfEmpty(Mono.error(()->new NotFoundException("could not find content for id: " + id)))
+			.switchIfEmpty(Mono.empty())
 			.map(this::entityToBoundary)
 			.log();
     }
 
     @Override
-    public Mono<Void> cleanup() {
-        // TODO Auto-generated method stub
-        return null;
-    }
+	public Mono<Void> cleanup() {
+		return this.catalogsRepo
+			.deleteAll()
+			.log();
+	}
 
 
     public CatalogBoundary entityToBoundary(CatalogEntity entity) {
@@ -74,9 +126,7 @@ public class CatalogServiceImpl implements CatalogService {
         boundary.setPrice(entity.getPrice());
         boundary.setProductDetails(entity.getProductDetails());
 
-        System.err.println("in entityToBoundary");
         return boundary;
-
     }
 
     public CatalogEntity boundaryToEntity(CatalogBoundary boundary) {
@@ -92,10 +142,6 @@ public class CatalogServiceImpl implements CatalogService {
         entity.setPrice(boundary.getPrice());
         entity.setProductDetails(boundary.getProductDetails());
 
-        System.err.println("in boundaryToEntity");
         return entity;
-
     }
-
-
 }
