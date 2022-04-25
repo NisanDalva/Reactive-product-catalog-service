@@ -12,7 +12,7 @@ public interface CatalogDao extends ReactiveMongoRepository<CatalogEntity, Strin
 
 	public Flux<CatalogEntity> findAllByProductIdNotNull(Pageable pageable);
 	public Mono<CatalogEntity> findByProductId(String id);
-	public Flux<CatalogEntity> findAllByNameRegex(String name, Pageable pageable);
-	public Flux<CatalogEntity> findAllByCategoryRegex(String category, Pageable pageable);
+	public Flux<CatalogEntity> findAllByName(String name, Pageable pageable);
+	public Flux<CatalogEntity> findAllByCategory(String category, Pageable pageable);
 	public Flux<CatalogEntity> findAllByPriceBetween(Range<Double> range, Pageable pageable);
 }

@@ -50,9 +50,9 @@ public class CatalogController {
 			@RequestParam(name = "sortBy", required = false, defaultValue = "_id") String sortBy,
 			@RequestParam(name = "sortOrder", required = false, defaultValue = "asc") String sortOrder,
 			@RequestParam(name = "filterType", required = false, defaultValue = "") String filterType,
-			@RequestParam(name = "filterValue", required = false, defaultValue = "") String filterValue,
-			@RequestParam(name = "minPrice", required = false, defaultValue = "0") double minPrice,
-			@RequestParam(name = "maxPrice", required = false, defaultValue = "100") double maxPrice
+			@RequestParam(name = "filterValue", required = false) String filterValue,
+			@RequestParam(name = "minPrice", required = false, defaultValue = "0") Double minPrice,
+			@RequestParam(name = "maxPrice", required = false, defaultValue = "100") Double maxPrice
 			) {
 		return catalogService.getAll(page, size, sortOrder, sortBy, filterType, filterValue, minPrice, maxPrice);
 	}

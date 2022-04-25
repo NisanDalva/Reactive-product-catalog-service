@@ -61,19 +61,28 @@ public class CatalogServiceImpl implements CatalogService {
     }
 
     public Flux<CatalogEntity> queryExecuter(int page, int size, String direction, String sortBy, String filterType, String filterValue,
-                                        double minPrice, double maxPrice) {
+                                        Double minPrice, Double maxPrice) {
 
         return pageableFactory(page, size, direction, sortBy)
             .flatMap(pageable -> {
 
                 switch(filterType) {
                     case "byName":
-                        return this.catalogsRepo.findAllByNameRegex(filterValue, pageable);
+                        if (filterValue == null || filterValue.trim().length() == 0)
+                            return Mono.error(()->new BadRequestException("filterValue cant be null or includes only spaces"));
+                        
+                        return this.catalogsRepo.findAllByName(filterValue, pageable);
                     
                     case "byCategoryName":
-                        return this.catalogsRepo.findAllByCategoryRegex(filterValue, pageable);
+                        if (filterValue == null || filterValue.trim().length() == 0)
+                            return Mono.error(()->new BadRequestException("filterValue cant be null or includes only spaces"));
+
+                        return this.catalogsRepo.findAllByCategory(filterValue, pageable);
 
                     case "byPrice":
+                        if (minPrice < 0 || maxPrice < 0 || maxPrice < minPrice)
+                            return Mono.error(()->new BadRequestException("invalid range, got: " + minPrice + " and " + maxPrice));
+
                         Range<Double> range = Range.closed(minPrice, maxPrice);
                         return this.catalogsRepo.findAllByPriceBetween(range, pageable);
 
