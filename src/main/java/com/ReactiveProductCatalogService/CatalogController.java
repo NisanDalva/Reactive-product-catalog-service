@@ -63,13 +63,4 @@ public class CatalogController {
 	public Mono<Void> cleanup() {
 		return catalogService.cleanup();
 	}
-
-	// @RequestMapping(
-	// 		path="/keyvalue/{id}",
-	// 		method = RequestMethod.GET,
-	// 		produces = MediaType.APPLICATION_JSON_VALUE)
-	// public Mono<DemoBoundary> getById(@PathVariable("id") String id) {
-	// 	return demoService.getById(id);
-	// }
-
 }
